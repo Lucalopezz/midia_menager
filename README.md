@@ -91,9 +91,12 @@ aceitas, desde que permaneçam dentro de `library/youtube/`.
 
 Quando uma URL aponta para uma playlist, todos os vídeos disponíveis nela são
 baixados na categoria escolhida. O `yt-dlp` processa os itens da playlist em
-ordem e continua com os próximos caso algum item esteja indisponível. O mesmo
-comando também pode misturar URLs de vídeos e playlists. Coloque a URL entre
-aspas para que caracteres como `&` não sejam interpretados pelo shell.
+ordem e adiciona a posição ao começo de cada nome (`1. Nome do vídeo`, `2. Nome
+do vídeo`, etc.), facilitando a ordenação no Jellyfin. Downloads avulsos
+continuam sem esse prefixo. O processamento continua com os próximos itens caso
+algum esteja indisponível. O mesmo comando também pode misturar URLs de vídeos
+e playlists. Coloque a URL entre aspas para que caracteres como `&` não sejam
+interpretados pelo shell.
 
 O arquivo `downloader/downloaded.txt` é o download archive do `yt-dlp`: vídeos
 já registrados nele não são baixados novamente. O histórico de cada URL é

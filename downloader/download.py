@@ -88,7 +88,12 @@ def build_download_options(destination: Path) -> dict[str, object]:
     destination.mkdir(parents=True, exist_ok=True)
 
     return {
-        "outtmpl": str(destination / "%(title).180B [%(id)s].%(ext)s"),
+        # Em playlists, prefixa o título com a posição (ex.: "1. Título").
+        # O trecho após "|" mantém o prefixo vazio em downloads avulsos.
+        "outtmpl": str(
+            destination
+            / "%(playlist_index&{}. |)s%(title).180B [%(id)s].%(ext)s"
+        ),
         "download_archive": str(DOWNLOAD_ARCHIVE),
         "format": (
             "bestvideo[height<=1080][vcodec^=avc1]+"
