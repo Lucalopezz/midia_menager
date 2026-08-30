@@ -1,0 +1,2 @@
+# O extra default inclui o componente EJS recomendado para suporte ao YouTube.
+yt-dlp[default]
