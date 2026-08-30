@@ -1,0 +1,33 @@
+# Ambiente e cache do Python
+/.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Estado persistente do Jellyfin
+/jellyfin/config/*
+!/jellyfin/config/.gitkeep
+/jellyfin/cache/*
+!/jellyfin/cache/.gitkeep
+
+# Biblioteca de mídia
+/library/**
+!/library/youtube/
+!/library/youtube/.gitkeep
+!/library/youtube/akita/
+!/library/youtube/akita/.gitkeep
+!/library/filmes/
+!/library/filmes/.gitkeep
+!/library/series/
+!/library/series/.gitkeep
+
+# Estado e logs do downloader
+/downloader/logs/*
+!/downloader/logs/.gitkeep
+/downloader/downloaded.txt
+
+# Arquivos temporários e do sistema
+*.part
+*.ytdl
+.DS_Store
+Thumbs.db
