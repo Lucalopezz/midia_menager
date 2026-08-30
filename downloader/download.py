@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Baixa uma fila de URLs sequencialmente para a biblioteca local."""
+"""Baixa vídeos ou playlists sequencialmente para a biblioteca local."""
 
 from __future__ import annotations
 
@@ -23,8 +23,8 @@ DOWNLOAD_ARCHIVE = SCRIPT_DIR / "downloaded.txt"
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Baixa URLs sequencialmente para library/youtube e continua a fila "
-            "quando uma URL falha."
+            "Baixa URLs de vídeos ou playlists sequencialmente para "
+            "library/youtube e continua a fila quando uma URL falha."
         )
     )
     parser.add_argument(
@@ -38,7 +38,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "urls",
         metavar="URL",
         nargs="+",
-        help="uma ou mais URLs de vídeos",
+        help="uma ou mais URLs de vídeos ou playlists",
     )
     return parser.parse_args(argv)
 
@@ -97,8 +97,9 @@ def build_download_options(destination: Path) -> dict[str, object]:
         ),
         "merge_output_format": "mp4",
         "windowsfilenames": True,
-        "noplaylist": True,
-        "ignoreerrors": False,
+        "noplaylist": False,
+        # Continua os demais itens quando um vídeo da playlist está indisponível.
+        "ignoreerrors": "only_download",
         "continuedl": True,
         "overwrites": False,
         "retries": 3,
@@ -106,7 +107,7 @@ def build_download_options(destination: Path) -> dict[str, object]:
     }
 
 
-def download_video(url: str, options: dict[str, object]) -> None:
+def download_url(url: str, options: dict[str, object]) -> None:
     with YoutubeDL(options) as downloader:
         result = downloader.download([url])
 
@@ -139,7 +140,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"\n[{index}/{total}] Processando: {url}")
 
         try:
-            download_video(url, options)
+            download_url(url, options)
         except DownloadError as error:
             message = compact_error_message(error)
             failed_urls.append(url)

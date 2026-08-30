@@ -69,12 +69,13 @@ python -m pip install --upgrade pip
 pip install -r downloader/requirements.txt
 ```
 
-Baixe uma ou várias URLs, processadas sequencialmente:
+Baixe uma ou várias URLs de vídeos ou playlists, processadas sequencialmente:
 
 ```bash
 python downloader/download.py URL1
 python downloader/download.py URL1 URL2 URL3
 python downloader/download.py --category akita URL1 URL2 URL3
+python downloader/download.py --category musica "https://www.youtube.com/playlist?list=ID_DA_PLAYLIST"
 ```
 
 Consulte todas as opções:
@@ -87,6 +88,12 @@ Sem `--category`, o destino é `library/youtube/`. Com, por exemplo,
 `--category akita`, o destino passa a ser `library/youtube/akita/`. A pasta é
 criada automaticamente. Categorias aninhadas como `cursos/python` também são
 aceitas, desde que permaneçam dentro de `library/youtube/`.
+
+Quando uma URL aponta para uma playlist, todos os vídeos disponíveis nela são
+baixados na categoria escolhida. O `yt-dlp` processa os itens da playlist em
+ordem e continua com os próximos caso algum item esteja indisponível. O mesmo
+comando também pode misturar URLs de vídeos e playlists. Coloque a URL entre
+aspas para que caracteres como `&` não sejam interpretados pelo shell.
 
 O arquivo `downloader/downloaded.txt` é o download archive do `yt-dlp`: vídeos
 já registrados nele não são baixados novamente. O histórico de cada URL é
