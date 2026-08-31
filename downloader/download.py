@@ -103,6 +103,8 @@ def build_download_options(destination: Path) -> dict[str, object]:
         "merge_output_format": "mp4",
         "windowsfilenames": True,
         "noplaylist": False,
+        # Usa a sessão autenticada do Firefox para evitar bloqueios antibot.
+        "cookiesfrombrowser": ("firefox", None, None, None),
         # Continua os demais itens quando um vídeo da playlist está indisponível.
         "ignoreerrors": "only_download",
         "continuedl": True,
