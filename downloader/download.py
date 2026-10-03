@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Sequence
@@ -16,8 +17,8 @@ from yt_dlp.utils import DownloadError
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 YOUTUBE_LIBRARY = PROJECT_ROOT / "library" / "youtube"
-LOG_FILE = SCRIPT_DIR / "logs" / "download.log"
-DOWNLOAD_ARCHIVE = SCRIPT_DIR / "downloaded.txt"
+LOG_FILE = Path(os.environ.get("DOWNLOAD_LOG", SCRIPT_DIR / "logs" / "download.log"))
+DOWNLOAD_ARCHIVE = Path(os.environ.get("DOWNLOAD_ARCHIVE", SCRIPT_DIR / "downloaded.txt"))
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -71,6 +72,8 @@ def setup_logging() -> logging.Logger:
     logger = logging.getLogger("media_downloader")
     logger.setLevel(logging.INFO)
     logger.propagate = False
+    for existing_handler in logger.handlers:
+        existing_handler.close()
     logger.handlers.clear()
 
     handler = logging.FileHandler(LOG_FILE, mode="a", encoding="utf-8")
@@ -84,10 +87,13 @@ def setup_logging() -> logging.Logger:
     return logger
 
 
-def build_download_options(destination: Path) -> dict[str, object]:
+def build_download_options(
+    destination: Path, *, browser_cookies: bool = True
+) -> dict[str, object]:
     destination.mkdir(parents=True, exist_ok=True)
+    DOWNLOAD_ARCHIVE.parent.mkdir(parents=True, exist_ok=True)
 
-    return {
+    options: dict[str, object] = {
         # Em playlists, prefixa o título com a posição (ex.: "1. Título").
         # O trecho após "|" mantém o prefixo vazio em downloads avulsos.
         "outtmpl": str(
@@ -103,15 +109,23 @@ def build_download_options(destination: Path) -> dict[str, object]:
         "merge_output_format": "mp4",
         "windowsfilenames": True,
         "noplaylist": False,
-        # Usa a sessão autenticada do Firefox para evitar bloqueios antibot.
-        "cookiesfrombrowser": ("firefox", None, None, None),
         # Continua os demais itens quando um vídeo da playlist está indisponível.
         "ignoreerrors": "only_download",
         "continuedl": True,
         "overwrites": False,
         "retries": 3,
         "fragment_retries": 3,
+        "socket_timeout": 30,
     }
+
+    cookies_file = os.environ.get("YTDLP_COOKIES_FILE")
+    if cookies_file and Path(cookies_file).is_file():
+        options["cookiefile"] = cookies_file
+    elif browser_cookies:
+        # Mantém a sessão do Firefox no uso pelo terminal.
+        options["cookiesfrombrowser"] = ("firefox", None, None, None)
+
+    return options
 
 
 def download_url(url: str, options: dict[str, object]) -> None:

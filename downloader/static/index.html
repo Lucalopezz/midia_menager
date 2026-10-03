@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111310">
+  <meta name="description" content="Adicione vídeos à sua biblioteca e acompanhe cada download.">
+  <title>Downloads · Mídia</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m9 5 10 7-10 7z"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7V5h6l2 2h10v13H3z"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6m0-6L10 14m0-10H4v16h16v-6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5m-4-4a8 8 0 0 1 14-2l1 6M4 12l1 6a8 8 0 0 0 14-2"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 3v1"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="m10 13 4-4m-6 6-2 2a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0m2 2 2-2a4 4 0 0 1 6 6l-5 5a4 4 0 0 1-6 0" transform="translate(1 1) scale(.9)"/></symbol>
+    <symbol id="i-drive" viewBox="0 0 24 24"><path d="m5 4-3 12v4h20v-4L19 4zM2 16h20m-5 2h2"/></symbol>
+  </svg>
+
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Mídia, página inicial"><span class="brand-mark"><svg><use href="#i-play"/></svg></span>mídia<span class="brand-dot">.</span></a>
+    <div class="sidebar-section">SEU ESPAÇO</div>
+    <nav aria-label="Navegação principal">
+      <a class="nav-item selected" href="/" aria-current="page"><svg><use href="#i-download"/></svg>Downloads<span class="nav-indicator"></span></a>
+      <a class="nav-item jellyfin-link" href="http://localhost:8096" target="_blank" rel="noreferrer"><svg><use href="#i-grid"/></svg>Biblioteca<svg class="nav-external"><use href="#i-external"/></svg></a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="storage-card"><div class="storage-title"><svg><use href="#i-drive"/></svg>Armazenamento</div><div class="storage-track"><span id="storage-bar"></span></div><p><strong id="storage-free">—</strong> disponíveis</p></div>
+      <div class="server"><span class="connection-dot"></span><div><strong>Servidor local</strong><span id="sidebar-connection">Conectando…</span></div></div>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar"><div class="breadcrumb">Seu servidor<span>/</span><strong>Downloads</strong></div><span class="online-pill" id="connection"><span class="connection-dot"></span>Conectando</span></header>
+    <section class="intro"><div><p class="eyebrow">DO LINK AO PLAY</p><h1>Mais vídeos.<br><span>Do seu jeito.</span></h1><p class="intro-copy">Cole os links. A gente cuida da sua biblioteca.</p></div><a class="button secondary jellyfin-link" href="http://localhost:8096" target="_blank" rel="noreferrer"><svg><use href="#i-play"/></svg>Abrir Jellyfin<svg class="small-icon"><use href="#i-external"/></svg></a></section>
+
+    <section class="stats" aria-label="Resumo dos downloads">
+      <div class="stat"><span class="stat-icon"><svg><use href="#i-clock"/></svg></span><div><span class="stat-label">Na fila</span><strong id="count-queued">0</strong></div><span class="stat-caption">Um de cada vez.</span></div>
+      <div class="stat"><span class="stat-icon lime"><svg><use href="#i-download"/></svg></span><div><span class="stat-label">Em andamento</span><strong id="count-active">0</strong></div><span class="stat-caption" id="active-caption">Pronto para começar.</span></div>
+      <div class="stat"><span class="stat-icon"><svg><use href="#i-check"/></svg></span><div><span class="stat-label">Concluídos</span><strong id="count-completed">0</strong></div><span class="stat-caption">Prontos para o play.</span></div>
+    </section>
+
+    <div class="workspace">
+      <section class="composer card" aria-labelledby="composer-title">
+        <div class="card-heading"><span class="heading-icon"><svg><use href="#i-link"/></svg></span><div><h2 id="composer-title">Novo download</h2><p>O que vamos assistir agora?</p></div></div>
+        <form id="download-form">
+          <div class="label-row"><label for="urls">Links dos vídeos</label><span>Uma URL por linha</span></div>
+          <div class="textarea-wrap"><textarea id="urls" name="urls" rows="7" maxlength="409600" spellcheck="false" autocapitalize="off" placeholder="https://www.youtube.com/watch?v=…&#10;https://www.youtube.com/playlist?list=…" required aria-describedby="urls-hint"></textarea><div class="textarea-footer"><span id="urls-hint">Vídeos e playlists são bem-vindos.</span><span id="url-count">0 links</span></div></div>
+          <div class="label-row category-label"><label for="category">Categoria</label><span>Opcional</span></div>
+          <div class="input-wrap"><svg><use href="#i-folder"/></svg><input id="category" name="category" maxlength="120" placeholder="Ex.: musica ou cursos/python" autocomplete="off" spellcheck="false" aria-describedby="destination-hint"></div>
+          <p class="destination" id="destination-hint">Salvar em <span id="destination">library/youtube/</span></p>
+          <p id="form-error" class="form-error" role="alert" hidden></p>
+          <button id="submit-button" class="button primary" type="submit" disabled><svg><use href="#i-download"/></svg><span id="submit-label">Adicionar à fila</span><svg class="button-arrow"><use href="#i-arrow"/></svg></button>
+          <div class="shortcut">Atalho <kbd>Ctrl</kbd> + <kbd>Enter</kbd></div>
+        </form>
+        <div class="composer-note"><span class="note-symbol">✳</span><p>Os arquivos vão direto para a biblioteca do Jellyfin. Vídeos já baixados são ignorados.</p></div>
+      </section>
+
+      <section class="queue card" aria-labelledby="queue-title">
+        <div class="queue-heading"><div><h2 id="queue-title">Seus downloads <span id="queue-total" class="number-pill">0</span></h2><p><span class="live-dot"></span>Progresso atualizado automaticamente</p></div><span class="queue-format">MP4 <span>·</span> ATÉ 1080p</span></div>
+        <div class="tabs" role="tablist" aria-label="Filtrar downloads"><button class="tab active" id="tab-all" role="tab" aria-selected="true" aria-controls="job-list" data-filter="all">Todos</button><button class="tab" id="tab-active" role="tab" aria-selected="false" aria-controls="job-list" data-filter="active" tabindex="-1">Em andamento</button><button class="tab" id="tab-completed" role="tab" aria-selected="false" aria-controls="job-list" data-filter="completed" tabindex="-1">Concluídos</button><button class="tab" id="tab-failed" role="tab" aria-selected="false" aria-controls="job-list" data-filter="failed" tabindex="-1">Falhas <span id="failed-badge" hidden></span></button></div>
+        <div id="job-list" class="job-list" role="tabpanel" aria-labelledby="tab-all"></div>
+        <div id="empty-state" class="empty-state"><div class="empty-art"><span class="orbit orbit-one"></span><span class="orbit orbit-two"></span><span class="empty-icon"><svg><use href="#i-download"/></svg></span><span class="spark spark-one">+</span><span class="spark spark-two">+</span></div><h3 id="empty-title">Sua biblioteca começa com um link.</h3><p id="empty-copy">Adicione seus vídeos favoritos e acompanhe<br>cada download por aqui.</p><div class="empty-tags"><span><svg><use href="#i-check"/></svg>Até 1080p</span><span><svg><use href="#i-check"/></svg>Sem duplicatas</span></div></div>
+        <div class="queue-footer"><svg><use href="#i-folder"/></svg><span>Destino padrão <strong>library/youtube/</strong></span><span id="history-note"></span></div>
+      </section>
+    </div>
+    <footer class="page-footer"><span>Feito para a sua próxima sessão.</span><span>Seu conteúdo. Seu servidor.</span></footer>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden><svg><use href="#i-check"/></svg><span></span></div>
+</body>
+</html>

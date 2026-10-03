@@ -3,8 +3,33 @@ services:
     image: jellyfin/jellyfin
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8096:8096"
+      - "8096:8096"
     volumes:
       - ./jellyfin/config:/config
       - ./jellyfin/cache:/cache
       - ./library:/media:ro
+
+  downloader:
+    build:
+      context: .
+      dockerfile: downloader/Dockerfile
+    restart: unless-stopped
+    init: true
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    environment:
+      HOME: /tmp
+      DOWNLOAD_ARCHIVE: /app/downloader/downloaded.txt
+      DOWNLOAD_LOG: /app/downloader/logs/download.log
+    ports:
+      - "${DOWNLOADER_BIND:-127.0.0.1}:${DOWNLOADER_PORT:-8080}:8080"
+    volumes:
+      - ./library:/app/library
+      - ./downloader/state:/app/downloader/state
+      - ./downloader/logs:/app/downloader/logs
+      - ./downloader/downloaded.txt:/app/downloader/downloaded.txt
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3

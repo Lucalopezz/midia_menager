@@ -1,5 +1,6 @@
 # Ambiente e cache do Python
 /.venv/
+/.env
 __pycache__/
 *.py[cod]
 *$py.class
@@ -25,6 +26,7 @@ __pycache__/
 /downloader/logs/*
 !/downloader/logs/.gitkeep
 /downloader/downloaded.txt
+/downloader/state/
 
 # Arquivos temporários e do sistema
 *.part

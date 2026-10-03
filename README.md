@@ -1,7 +1,73 @@
 # Servidor de mídia local
 
-MVP local com Jellyfin em Docker e um downloader sequencial de vídeos baseado em
-`yt-dlp`. Todo o estado fica dentro deste diretório.
+Servidor local com Jellyfin em Docker e uma interface web para o downloader
+sequencial de vídeos baseado em `yt-dlp`. Todo o estado fica dentro deste diretório.
+
+## Início rápido
+
+```bash
+mkdir -p downloader/state downloader/logs library/youtube
+touch downloader/downloaded.txt
+docker compose up -d --build
+```
+
+- Downloads: [http://localhost:8080](http://localhost:8080)
+- Jellyfin: [http://localhost:8096](http://localhost:8096)
+
+Na página de downloads, cole uma URL por linha, escolha uma categoria opcional
+e clique em **Adicionar à fila**. Vídeos e playlists são processados em ordem.
+A página mostra a porcentagem da faixa em download, velocidade, tempo restante
+e a etapa de finalização. Quando vídeo e áudio vêm separados, cada faixa tem
+sua própria porcentagem; em playlists, a página também mostra o item atual.
+Quando o servidor não informa o tamanho, a barra indica atividade sem inventar
+uma porcentagem. A atualização acontece a cada segundo.
+
+Você pode fechar a página: o trabalho continua no servidor. A fila e o histórico
+ficam em `downloader/state/queue.sqlite3`; downloads interrompidos voltam à fila
+depois de reiniciar o container. O archive e os logs são os mesmos do script.
+Falhas não interrompem a fila e podem ser tentadas novamente pela interface.
+A página exibe todos os pendentes e os 100 últimos downloads finalizados.
+
+O container já inclui Python, `yt-dlp`, ffmpeg e Deno. Os arquivos são gravados
+em `library/youtube/<categoria>/`, compartilhado com o Jellyfin. Para que novos
+vídeos apareçam, habilite o monitoramento da biblioteca no Jellyfin ou execute
+uma atualização da biblioteca.
+
+O downloader escuta apenas em `127.0.0.1:8080` por padrão. Para acessá-lo de
+outros dispositivos da sua rede, configure `DOWNLOADER_BIND=0.0.0.0` em um
+arquivo `.env` ao lado do Compose. A interface é destinada à rede local e não
+tem login. `DOWNLOADER_PORT` permite trocar a porta.
+
+O Compose usa UID/GID `1000:1000` para os arquivos. Caso seu usuário tenha outros
+IDs, configure `LOCAL_UID` e `LOCAL_GID` no `.env`, consultando `id -u` e `id -g`.
+As pastas e o archive devem existir e ser graváveis por esse usuário antes de subir.
+
+### Cookies do YouTube no Docker
+
+O script no terminal mantém o uso dos cookies do Firefox. Dentro do container,
+a interface funciona sem cookies por padrão. Se o YouTube exigir autenticação,
+coloque um arquivo de cookies no formato Netscape em
+`downloader/state/cookies.txt`. Ele será usado nos próximos downloads,
+sem reconstruir a imagem. O arquivo não é versionado.
+
+Você pode gerar esse arquivo no host com o Firefox já autenticado:
+
+```bash
+source .venv/bin/activate
+python -m yt_dlp --cookies-from-browser firefox --cookies downloader/state/cookies.txt
+chmod 600 downloader/state/cookies.txt
+```
+
+O arquivo contém sua sessão; mantenha-o privado. A exportação pelo navegador é
+descrita na [documentação do yt-dlp](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp).
+
+Para atualizar a interface e as dependências do container:
+
+```bash
+docker compose build --pull --no-cache downloader
+docker compose up -d downloader
+docker compose logs -f downloader
+```
 
 ## Estrutura
 
@@ -16,12 +82,16 @@ MVP local com Jellyfin em Docker e um downloader sequencial de vídeos baseado e
 │   ├── filmes/
 │   └── series/
 └── downloader/
+    ├── Dockerfile
     ├── download.py
+    ├── web.py
+    ├── static/         # interface HTML, CSS e JavaScript
+    ├── state/          # fila persistente e cookies opcionais
     ├── downloaded.txt  # criado após o primeiro download
     └── logs/
 ```
 
-Configurações, cache, mídias, logs e o arquivo `downloaded.txt` são dados de
+Configurações, cache, mídias, fila, cookies, logs e o arquivo `downloaded.txt` são dados de
 runtime e não são versionados.
 
 ## Jellyfin
@@ -42,9 +112,8 @@ docker compose logs -f jellyfin
 docker compose down
 ```
 
-Acesse [http://localhost:8096](http://localhost:8096). A porta está vinculada
-apenas a `127.0.0.1`, portanto o serviço não fica exposto para outros
-computadores da rede.
+Acesse [http://localhost:8096](http://localhost:8096). Na configuração atual,
+o Jellyfin também está disponível para outros computadores da rede na porta 8096.
 
 No assistente inicial, crie as bibliotecas usando estes caminhos internos do
 container:
@@ -53,8 +122,8 @@ container:
 - Filmes: `/media/filmes`
 - Séries: `/media/series`
 
-O Jellyfin enxerga `library/` como somente leitura. Os downloads devem ser
-feitos pelo script no sistema hospedeiro.
+O Jellyfin enxerga `library/` como somente leitura. O container do downloader
+grava os arquivos nessa mesma biblioteca, e o script também pode ser usado no host.
 
 ## Downloader
 
@@ -146,3 +215,20 @@ necessário, mas não instala Deno nem ffmpeg. O script não tenta instalar paco
 do sistema automaticamente.
 
 Use o downloader somente para conteúdo que você tenha autorização para baixar.
+
+## Desenvolvimento da interface
+
+Depois de instalar `downloader/requirements.txt` no ambiente virtual:
+
+```bash
+python -m uvicorn downloader.web:app --host 127.0.0.1 --port 8080
+```
+
+Execute apenas uma instância do backend (um worker) por pasta de estado.
+Use uma porta diferente se o container já estiver rodando. Para os testes da API
+e da fila, que usam pastas temporárias e downloads simulados:
+
+```bash
+pip install httpx
+python -m unittest downloader.test_web -v
+```

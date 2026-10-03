@@ -1,0 +1,12 @@
+.git
+.venv
+.agents
+.codex
+.aws
+jellyfin
+library
+downloader/state
+downloader/logs
+downloader/downloaded.txt
+**/__pycache__
+**/*.pyc
